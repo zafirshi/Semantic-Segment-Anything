@@ -170,6 +170,7 @@ def semantic_segment_anything_inference(filename, output_path, rank, img=None, s
         raise NotImplementedError()
 
     # Add SegFormer results into anns and save visualization
+    anns['segformer'] = {}
     seg_labels = class_ids.unique()
     for label in seg_labels:
         v = maskUtils.encode(np.array((class_ids == label).cpu().numpy(), order='F', dtype=np.uint8))
