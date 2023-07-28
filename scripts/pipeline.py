@@ -16,7 +16,7 @@ from configs.coco_id2label import CONFIG as CONFIG_COCO_ID2LABEL
 from clip import clip_classification
 from clipseg import clipseg_segmentation
 from oneformer import oneformer_coco_segmentation, oneformer_ade20k_segmentation, oneformer_cityscapes_segmentation
-from blip import open_vocabulary_classification_blip
+# from blip import open_vocabulary_classification_blip
 from segformer import segformer_segmentation as segformer_func
 
 oneformer_func = {
@@ -168,6 +168,21 @@ def semantic_segment_anything_inference(filename, output_path, rank, img=None, s
         class_ids = segformer_func(img, semantic_branch_processor, semantic_branch_model, rank)
     else:
         raise NotImplementedError()
+
+    # Add SegFormer results into anns and save visualization
+    seg_labels = class_ids.unique()
+    for label in seg_labels:
+        v = maskUtils.encode(np.array((class_ids == label).cpu().numpy(), order='F', dtype=np.uint8))
+        v['counts'] = v['counts'].decode('utf-8')
+        k = str(label.item())
+        anns['segformer'][k] = v
+
+    seg_each_masks = []
+    seg_each_class = []
+    for label in seg_labels:
+        seg_each_masks.append((class_ids == label).to(torch.uint8).cpu())
+        seg_each_class.append(id2label['id2label'][str(label.item())])
+
     semantc_mask = class_ids.clone()
     anns['annotations'] = sorted(anns['annotations'], key=lambda x: x['area'], reverse=True)
     for ann in anns['annotations']:
@@ -221,6 +236,17 @@ def semantic_segment_anything_inference(filename, output_path, rank, img=None, s
                             show=False,
                             out_file=os.path.join(output_path, filename + '_semantic.png'))
         print('[Save] save SSA prediction: ', os.path.join(output_path, filename + '_semantic.png'))
+
+        # save SegFormer visual results
+        imshow_det_bboxes(img,
+                          bboxes=None,
+                          labels=np.arange(len(seg_each_class)),
+                          segms=torch.stack(seg_each_masks, dim=0).numpy(),
+                          class_names=seg_each_class,
+                          font_size=25,
+                          show=False,
+                          out_file=os.path.join(output_path, filename + '_semantic_sgf.png'))
+        print('[Save] save Segformer prediction: ', os.path.join(output_path, filename + '_semantic_sgf.png'))
     mmcv.dump(anns, os.path.join(output_path, filename + '_semantic.json'))
     # 手动清理不再需要的变量
     del img
