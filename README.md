@@ -195,6 +195,11 @@ Run our SSA on ADE20K with 8 GPUs:
 python scripts/main_ssa.py --ckpt_path ./ckp/sam_vit_h_4b8939.pth --save_img --world_size 8 --dataset ade20k --data_dir data/ade20k/ADEChallengeData2016/images/validation/ --gt_path data/ade20k/ADEChallengeData2016/annotations/validation/ --out_dir output_ade20k
 ```
 
+Run SSA on own dataset with single GPU: 
+```bash
+python scripts/main_ssa.py --ckpt_path ./ckp/sam_vit_b_01ec64.pth --save_img --world_size 1 --dataset ade20k --data_dir <datasets_path> --out_dir <output_dir>
+```
+
 Run our SSA on Cityscapes with 8 GPUs:
 ```bash
 python scripts/main_ssa.py --ckpt_path ./ckp/sam_vit_h_4b8939.pth --save_img --world_size 8 --dataset cityscapes --data_dir data/cityscapes/leftImg8bit/val/ --gt_path data/cityscapes/gtFine/val/ --out_dir output_cityscapes
